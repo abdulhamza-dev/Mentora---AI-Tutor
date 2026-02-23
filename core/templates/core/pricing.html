@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Pricing - AI Teacher{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 60px auto; padding: 20px; font-family: 'Inter', sans-serif;">
+    <header style="text-align: center; margin-bottom: 60px;">
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 12px;">Choose Your Plan</h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem;">Simple, fair pricing for students.</p>
+    </header>
+
+    <div class="pricing-grid">
+        <!-- Free Plan -->
+        <div class="pricing-card">
+            <h3>Free Plan</h3>
+            <div class="pricing-price">$0<span
+                    style="font-size: 1rem; color: var(--text-secondary); font-weight: 400;">/mo</span></div>
+            <ul class="pricing-features">
+                <li><i data-lucide="check" style="width: 16px;"></i> 3 Guest questions</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> 20 Questions per month</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> Basic model</li>
+            </ul>
+            <button class="btn-secondary" style="width: 100%; cursor: default;">Active</button>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="pricing-card">
+            <h3>Pro Plan</h3>
+            <div class="pricing-price">$10<span
+                    style="font-size: 1rem; color: var(--text-secondary); font-weight: 400;">/mo</span></div>
+            <ul class="pricing-features">
+                <li><i data-lucide="check" style="width: 16px;"></i> Unlimited access</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> Full chat history</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> Personalized learning</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> GPT-4 Performance</li>
+            </ul>
+            <button class="btn-submit-full" style="margin: 0;">Upgrade Plan</button>
+        </div>
+
+        <!-- Ultra Plan -->
+        <div class="pricing-card">
+            <h3>Plus Plan</h3>
+            <div class="pricing-price">$20<span
+                    style="font-size: 1rem; color: var(--text-secondary); font-weight: 400;">/mo</span></div>
+            <ul class="pricing-features">
+                <li><i data-lucide="check" style="width: 16px;"></i> Everything in Pro</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> Advanced Voice synth</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> Custom bot creation</li>
+                <li><i data-lucide="check" style="width: 16px;"></i> Priority support</li>
+            </ul>
+            <button class="btn-submit-full" style="margin: 0; background-color: #333; color: white;">Get Plus</button>
+        </div>
+    </div>
+    <script>lucide.createIcons();</script>
+
+    <div style="text-align: center; margin-top: 64px;">
+        <a href="/" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;">← Return to Chat</a>
+    </div>
+</div>
+{% endblock %}

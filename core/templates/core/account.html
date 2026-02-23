@@ -1,0 +1,72 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Account - AI Teacher{% endblock %}
+
+{% block content %}
+<aside class="sidebar">
+    <button class="new-chat-btn" onclick="location.href='/'">
+        <i data-lucide="arrow-left" style="width: 18px;"></i>
+        <span>Back to Chat</span>
+    </button>
+    <div class="history-label">General</div>
+    <a href="#" class="history-item" style="background: rgba(255,255,255,0.05); font-weight: 600;">
+        <i data-lucide="user" style="width: 16px; margin-right: 8px; vertical-align: middle;"></i>
+        Profile
+    </a>
+    <a href="{% url 'pricing' %}" class="history-item">
+        <i data-lucide="credit-card" style="width: 16px; margin-right: 8px; vertical-align: middle;"></i>
+        Payments
+    </a>
+
+    <div class="sidebar-footer" style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
+        <a href="{% url 'logout' %}?next=/" class="sidebar-link" style="color: var(--text-secondary);">
+            <i data-lucide="log-out" style="width: 18px;"></i>
+            <span>Sign out</span>
+        </a>
+    </div>
+</aside>
+
+<main class="main-chat">
+    <div class="settings-container">
+        <header class="settings-header">
+            <h1>Settings</h1>
+            <p style="color: var(--text-secondary);">Manage your account and preferences.</p>
+        </header>
+
+        <div class="settings-list">
+            <!-- Profile Section -->
+            <section class="settings-section">
+                <h2>Profile Information</h2>
+
+                <div class="settings-item">
+                    <span class="settings-label">Log-in Email</span>
+                    <div class="settings-content">{{ user.username }}</div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="settings-item">
+                        <label class="settings-label" for="interests-textarea">Learning Interests</label>
+                        <textarea id="interests-textarea" name="interests"
+                            style="background: #111; color: white; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 0.95rem; resize: vertical; min-height: 120px; outline: none; margin-top: 8px;">{{ profile.interests }}</textarea>
+                    </div>
+                    <button type="submit" class="btn-submit-full"
+                        style="width: auto; padding-left: 24px; padding-right: 24px;">Update Profile</button>
+                </form>
+            </section>
+
+            <!-- Plan Section -->
+            <section class="settings-section"
+                style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h2>Subscription Plan</h2>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">You are currently using the
+                        <strong>{{ profile.get_plan_display }}</strong> plan.</div>
+                </div>
+                <button class="btn-secondary" onclick="location.href='{% url 'pricing' %}'">Manage subscription</button>
+            </section>
+        </div>
+    </div>
+</main>
+<script>lucide.createIcons();</script>
+{% endblock %}

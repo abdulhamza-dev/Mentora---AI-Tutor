@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Sign Up - AI Teacher{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <h1>Sign Up</h1>
+        <p class="subtitle">Create your personal student account.</p>
+
+        {% if error %}
+        <div
+            style="background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); color: #ff5555; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'signup' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" name="username" id="email" placeholder="student@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" placeholder="At least 8 characters" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" name="confirm_password" id="confirm_password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-submit-full">Create Account</button>
+        </form>
+
+        <div class="auth-links">
+            Already have an account? <a href="{% url 'login' %}">Log in</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
