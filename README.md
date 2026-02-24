@@ -27,11 +27,11 @@ A playful and interactive Django backend for an AI Teacher application designed 
    ```
 4. **Run Migrations**:
    ```bash
-   python manage.py migrate
+   python3 manage.py migrate
    ```
 5. **Start the Server**:
    ```bash
-   python manage.py runserver
+   python3 manage.py runserver
    ```
 
 ## API Endpoints
