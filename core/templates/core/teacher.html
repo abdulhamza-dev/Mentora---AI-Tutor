@@ -4,6 +4,143 @@
 {% block title %}Ask AI Teacher{% endblock %}
 
 {% block content %}
+<style>
+    .interaction-hub {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+        gap: 20px;
+        position: relative;
+    }
+
+    .tutor-logo-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+    }
+
+    .tutor-logo {
+        width: 100%;
+        height: 100%;
+        border-radius: 24px;
+        object-fit: cover;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .glow-effect {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: var(--accent-color);
+        border-radius: 24px;
+        filter: blur(20px);
+        opacity: 0;
+        z-index: 1;
+        transition: opacity 0.3s;
+    }
+
+    .listening .glow-effect {
+        opacity: 0.6;
+        animation: pulse-glow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-glow {
+        0% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.4;
+        }
+
+        50% {
+            transform: translate(-50%, -50%) scale(1.4);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.4;
+        }
+    }
+
+    .listening-status {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        height: 20px;
+    }
+
+    .voice-controls {
+        display: flex;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .btn-stop-listening {
+        background: rgba(255, 77, 77, 0.1);
+        border: 1px solid rgba(255, 77, 77, 0.3);
+        color: #ff4d4d;
+    }
+
+    .btn-stop-listening:hover {
+        background: rgba(255, 77, 77, 0.2);
+    }
+
+    /* Day Sidebar Styles */
+    .history-day-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        font-size: 0.85rem;
+    }
+
+    .history-day-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .history-day-item.completed {
+        color: var(--teal);
+        background: rgba(26, 188, 156, 0.05);
+    }
+
+    .history-day-item.completed:hover {
+        background: rgba(26, 188, 156, 0.1);
+    }
+
+    .history-day-item.in_progress {
+        color: var(--accent-color);
+        background: rgba(110, 68, 255, 0.05);
+        border: 1px solid rgba(110, 68, 255, 0.2);
+    }
+
+    .history-day-item.locked {
+        color: var(--text-secondary);
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .day-status-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .history-day-item.active {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+</style>
 <div class="app-container">
     <div class="stars-container" id="stars-container"></div>
     <!-- Sidebar for Chat History -->
@@ -12,9 +149,9 @@
             <i data-lucide="plus" style="width: 18px;"></i>
             <span>New Chat</span>
         </button>
-        <div class="history-label">Recent Chats</div>
+        <div class="history-label" id="sidebar-context-label">Recent Chats</div>
         <div id="history-list" class="history-list">
-            <!-- Dynamic history items -->
+            <!-- Dynamic history items or Days will go here -->
         </div>
 
         <div class="sidebar-footer"
@@ -40,10 +177,26 @@
     <!-- Main Chat Workspace -->
     <main class="main-chat">
         <header class="teacher-header">
-            <h2 style="font-size: 1rem; font-weight: 600;">AI Teacher</h2>
-            <img src="{% static 'core/images/logo.png' %}" alt="Logo" class="header-avatar"
-                style="width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <h2 style="font-size: 1rem; font-weight: 600;">Antigravity - {{ subject }} Tutor</h2>
+            <div id="subject-progress" class="history-progress-badge"
+                style="background: rgba(26, 188, 156, 0.1); border: 1px solid rgba(26, 188, 156, 0.3); padding: 4px 12px; border-radius: 100px; color: var(--teal); font-size: 0.75rem; font-weight: 500;">
+                Day {{ current_day }}
+            </div>
+            <div class="voice-controls">
+                <button id="toggle-listening-btn" class="btn-secondary btn-stop-listening">
+                    <i data-lucide="mic-off" style="width: 16px;"></i>
+                    <span>Stop Listening</span>
+                </button>
+            </div>
         </header>
+
+        <div class="interaction-hub">
+            <div id="logo-container" class="tutor-logo-container">
+                <div class="glow-effect"></div>
+                <img src="{% static 'core/images/logo.png' %}" alt="Logo" class="tutor-logo">
+            </div>
+            <div id="listening-text" class="listening-status">Listening...</div>
+        </div>
 
         <!-- Message Stream -->
         <div id="chat-stream" class="chat-stream">
@@ -86,21 +239,32 @@
 <script>
     // Initialize Lucide Icons
     lucide.createIcons();
+
+    const logoContainer = document.getElementById('logo-container');
+    const listeningText = document.getElementById('listening-text');
+    const toggleListeningBtn = document.getElementById('toggle-listening-btn');
     const questionInput = document.getElementById('student-question');
     const askBtn = document.getElementById('ask-btn');
     const micBtn = document.getElementById('mic-btn');
-    const stopBtn = document.getElementById('stop-btn');
     const chatStream = document.getElementById('chat-stream');
     const historyList = document.getElementById('history-list');
-    const teacherAvatar = document.querySelector('.header-teacher-avatar');
+    const sidebarContextLabel = document.getElementById('sidebar-context-label');
+    const currentSubject = "{{ subject }}";
+    // Now ALL subjects use dynamic days except maybe "General Learning"
+    const isDayMode = currentSubject.toLowerCase() !== "general learning";
 
     // Text-to-Speech Configuration
     const synth = window.speechSynthesis;
+    const stopBtn = document.getElementById('stop-btn');
 
-    // Stop Button Logic
+    // Stop Button Logic (Cancel Speech)
     stopBtn.addEventListener('click', () => {
         synth.cancel();
     });
+
+    let isSpeaking = false;
+    let isListening = false;
+    let shouldListen = true;
 
     // Speech-to-Text Configuration
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -108,51 +272,100 @@
 
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.continuous = false;
+        recognition.continuous = true;
         recognition.interimResults = false;
         recognition.lang = 'en-US';
 
         recognition.onstart = () => {
+            isListening = true;
+            logoContainer.classList.add('listening');
+            listeningText.innerText = "I'm listening...";
             micBtn.classList.add('recording');
-            questionInput.placeholder = "Listening...";
         };
 
         recognition.onend = () => {
+            isListening = false;
+            logoContainer.classList.remove('listening');
             micBtn.classList.remove('recording');
-            questionInput.placeholder = "Ask me anything...";
+
+            // Auto-restart if we should still be listening and not speaking
+            if (shouldListen && !isSpeaking) {
+                try { recognition.start(); } catch (e) { }
+            } else if (!shouldListen) {
+                listeningText.innerText = "Listening stopped.";
+            }
         };
 
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            questionInput.value = transcript;
-            askTeacher();
+            const transcript = event.results[event.results.length - 1][0].transcript;
+            if (transcript.trim()) {
+                addMessage(transcript, true);
+                askTeacher(transcript);
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            if (event.error === 'no-speech') {
+                // Silently ignore or show hidden status
+            }
         };
     } else {
         micBtn.style.display = 'none';
+        listeningText.innerText = "Voice recognition not supported.";
     }
 
+    function toggleListening() {
+        if (isListening) {
+            shouldListen = false;
+            recognition.stop();
+            toggleListeningBtn.querySelector('span').innerText = "Resume Listening";
+            toggleListeningBtn.querySelector('i').setAttribute('data-lucide', 'mic');
+            toggleListeningBtn.classList.remove('btn-stop-listening');
+        } else {
+            shouldListen = true;
+            recognition.start();
+            toggleListeningBtn.querySelector('span').innerText = "Stop Listening";
+            toggleListeningBtn.querySelector('i').setAttribute('data-lucide', 'mic-off');
+            toggleListeningBtn.classList.add('btn-stop-listening');
+        }
+        lucide.createIcons();
+    }
+
+    toggleListeningBtn.addEventListener('click', toggleListening);
     micBtn.addEventListener('click', () => {
-        if (recognition) recognition.start();
+        if (!isListening) {
+            shouldListen = true;
+            recognition.start();
+        }
     });
 
     function speak(text) {
         if (!synth) return;
         synth.cancel();
 
-        // Strip emojis and special characters for cleaner speech
-        const cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F3FB}-\u{1F3FF}\u{1F400}-\u{1F4FF}\u{1F500}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{1F018}-\u{1F02B}\u{1F004}\u{1F0CF}\u{1F018}-\u{1F02B}\u{1F004}\u{1F0CF}]/gu, '');
+        isSpeaking = true;
+        // Stop listening while speaking to avoid feedback
+        if (isListening) recognition.stop();
+
+        const cleanText = text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F3FB}-\u{1F3FF}\u{1F400}-\u{1F4FF}\u{1F500}-\u{1F5FF}\u{1F900}-\u{1F9FF}\u{1F018}-\u{1F02B}\u{1F004}\u{1F0CF}]/gu, '');
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
         const voices = synth.getVoices();
-        // Look for better sounding voices
-        const preferredVoices = ['Google US English', 'Samantha', 'Microsoft Zira Desktop', 'Natural'];
+
+        // Optimize voice selection for a "warm/calm/natural" teacher vibe
+        const preferredVoices = ['Samantha', 'Google US English', 'Daniel', 'Microsoft Zira Desktop', 'Natural', 'English (United States)'];
         utterance.voice = voices.find(v => preferredVoices.some(pv => v.name.includes(pv))) || voices[0];
 
-        utterance.pitch = 1.15; // Slightly higher for a friendly kid-teacher vibe
-        utterance.rate = 0.95;  // Slightly slower to sound more natural and melodious
+        utterance.pitch = 1.0;  // Slightly higher for a friendly kid-teacher vibe
+        utterance.rate = 0.85;  // Slightly slower for patient, calm delivery
         utterance.volume = 1;
-        utterance.onstart = () => teacherAvatar.classList.add('speaking-active');
-        utterance.onend = () => teacherAvatar.classList.remove('speaking-active');
+
+        utterance.onend = () => {
+            isSpeaking = false;
+            if (shouldListen) recognition.start();
+        };
+
         synth.speak(utterance);
     }
 
@@ -178,11 +391,18 @@
     }
 
     async function loadHistory() {
+        if (isDayMode) {
+            return await loadSubjectDays();
+        }
+
         try {
             const response = await fetch('/history/');
             const data = await response.json();
+            const history = data.history || [];
+
+            sidebarContextLabel.innerText = "Recent Chats";
             historyList.innerHTML = '';
-            data.history.forEach(item => {
+            history.forEach(item => {
                 const container = document.createElement('div');
                 container.className = 'history-item-container';
 
@@ -227,11 +447,103 @@
                 actions.appendChild(dropdown);
 
                 container.appendChild(div);
-                container.appendChild(actions);
                 historyList.appendChild(container);
             });
             lucide.createIcons();
-        } catch (e) { console.error('History load failed', e); }
+            return history;
+        } catch (e) {
+            console.error('History load failed', e);
+            return [];
+        }
+    }
+
+    async function loadSubjectDays() {
+        try {
+            const response = await fetch(`/subject/days/?subject=${encodeURIComponent(currentSubject)}`);
+            const data = await response.json();
+            const days = data.days || [];
+
+            sidebarContextLabel.innerText = `${currentSubject} Days`;
+            historyList.innerHTML = '';
+
+            days.forEach(d => {
+                const div = document.createElement('div');
+                div.className = `history-day-item ${d.status}`;
+                if (d.day === parseInt("{{ current_day }}")) div.classList.add('active');
+
+                let icon = 'lock';
+                if (d.status === 'completed') icon = 'check-circle';
+                if (d.status === 'in_progress') icon = 'play-circle';
+
+                div.innerHTML = `
+                    <span>Day ${d.day}</span>
+                    <i data-lucide="${icon}" class="day-status-icon"></i>
+                `;
+
+                if (d.status !== 'locked') {
+                    div.onclick = () => {
+                        document.querySelectorAll('.history-day-item').forEach(i => i.classList.remove('active'));
+                        div.classList.add('active');
+                        loadDayHistory(d.day);
+                    };
+                }
+
+                historyList.appendChild(div);
+            });
+            lucide.createIcons();
+            return days;
+        } catch (e) {
+            console.error('Subject days load failed', e);
+            return [];
+        }
+    }
+
+    async function loadDayHistory(day) {
+        try {
+            const response = await fetch(`/history/?topic=${encodeURIComponent(currentSubject)}&day=${day}`);
+            const data = await response.json();
+            const history = data.history || [];
+
+            chatStream.innerHTML = '';
+
+            // Greeting logic
+            let welcomeHeader = `Welcome to your ${currentSubject} journey! 🚀`;
+            let daySpecific = `Today is Day ${day}. Let's continue our lesson!`;
+
+            if (currentSubject.toLowerCase().includes("history")) {
+                const chapters = ["Dawn of Civilization", "Glory of Greece", "Might of Rome", "Middle Ages", "Renaissance", "Industrial Revolution", "Modern Age"];
+                const dayName = chapters[day - 1] || "World History";
+                daySpecific = `Today is Day ${day}. We're exploring ${dayName}! 🏛️📜`;
+            } else if (currentSubject.toLowerCase().includes("astronomy")) {
+                const chapters = ["Our Solar System", "Burning Stars", "The Milky Way", "Black Holes", "Space Exploration", "The Big Bang", "Galaxies Beyond"];
+                const dayName = chapters[day - 1] || "the Universe";
+                daySpecific = `Today is Day ${day}. We're looking at ${dayName}! 🌌✨`;
+            } else if (currentSubject.toLowerCase().includes("biology") || currentSubject.toLowerCase().includes("science")) {
+                const chapters = ["Building Blocks: Cells", "Plant Life", "Animal Kingdom", "Human Body", "Ecosystems", "Genetics", "Evolution"];
+                const dayName = chapters[day - 1] || "Science";
+                daySpecific = `Today is Day ${day}. We're studying ${dayName}! 🌿🔬`;
+            } else if (currentSubject.toLowerCase().includes("philosophy")) {
+                const chapters = ["Great Ideas", "Ethics", "Logic", "Ancient Thinkers", "The Nature of Mind", "Justice", "Existentialism"];
+                const dayName = chapters[day - 1] || "Philosophy";
+                daySpecific = `Today is Day ${day}. We're exploring ${dayName}! 🧠💡`;
+            }
+
+            const greeting = history.length > 0 ? `Welcome back to Day ${day}! I'm ready to continue our lesson on ${currentSubject}.` : `${welcomeHeader} ${daySpecific}`;
+
+            if (history.length > 0) {
+                // Show returning greeting briefly or as first message
+                addMessage(greeting, false);
+                history.forEach(item => {
+                    addMessage(item.question, true);
+                    addMessage(item.answer, false);
+                });
+            } else {
+                addMessage(greeting, false);
+                speak(greeting);
+            }
+        } catch (e) {
+            console.error('Day history load failed', e);
+        }
     }
 
     async function deleteConversation(id, element) {
@@ -259,19 +571,17 @@
     });
 
     function createNewChat() {
-        chatStream.innerHTML = `
-            <div class="message-bubble message-ai">
-                <div class="avatar-icon"><img src="{% static 'core/images/logo.png' %}" alt="Logo" style="width: 24px; height: 24px; border-radius: 4px;"></div>
-                <div class="message-text">New chat started! What's on your mind?</div>
-            </div>
-        `;
+        chatStream.innerHTML = '';
+        const openingLine = "Hello! I'm your {{ subject }} Tutor. What would you like to learn today?";
+        addMessage(openingLine, false);
+        speak(openingLine);
     }
 
-    async function askTeacher() {
-        const question = questionInput.value.trim();
+    async function askTeacher(predefinedQuestion = null) {
+        const question = predefinedQuestion || questionInput.value.trim();
         if (!question) return;
 
-        addMessage(question, true);
+        if (!predefinedQuestion) addMessage(question, true);
         questionInput.value = '';
 
         askBtn.disabled = true;
@@ -288,18 +598,19 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ question: question, topic: 'General Learning' })
+                body: JSON.stringify({ question: question, topic: "{{ subject }}" })
             });
 
             const data = await response.json();
             chatStream.removeChild(loadingBubble);
 
             if (data.limit_reached) {
-                addMessage("I've reached my free limit for now! Please log in or upgrade to keep learning.", false);
-                speak("I've reached my free limit for now! Please log in or upgrade to keep learning.");
+                const msg = data.error || "I've reached my free limit for now! Please upgrade to keep learning.";
+                addMessage(msg, false);
+                speak(msg);
                 setTimeout(() => {
-                    window.location.href = data.error.includes("Guest") ? '/signup/' : '/pricing/';
-                }, 3000);
+                    window.location.href = data.is_logged_in ? '/pricing/' : '/signup/';
+                }, 4000);
                 return;
             }
 
@@ -322,7 +633,16 @@
     });
 
     // Initial load
-    loadHistory();
+    window.onload = async () => {
+        await loadHistory();
+
+        if (isDayMode) {
+            const currentDay = parseInt("{{ current_day }}");
+            await loadDayHistory(currentDay);
+        } else {
+            createNewChat();
+        }
+    };
 
     // Generate Moving Stars
     function generateStars() {

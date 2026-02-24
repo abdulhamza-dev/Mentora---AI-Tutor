@@ -5,20 +5,27 @@ from rest_framework import status
 from django.http import JsonResponse
 from freeflow_llm import FreeFlowClient
 from dotenv import load_dotenv
-from .models import Conversation, UserProfile
-from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from .models import Conversation, UserProfile, SubjectProgress
 
 # Initialize FreeFlow Client
 def get_freeflow_client():
     load_dotenv()
     return FreeFlowClient()
 
-def teacher_view(request):
+def teacher_view(request, subject="General Learning"):
     """Render the AI Teacher interface."""
-    from django.shortcuts import render
-    return render(request, 'core/teacher.html')
+    current_day = 1
+    if request.user.is_authenticated:
+        progress, _ = SubjectProgress.objects.get_or_create(user=request.user, subject=subject)
+        current_day = progress.current_day
+    
+    return render(request, 'core/teacher.html', {
+        'subject': subject,
+        'current_day': current_day
+    })
 
 def landing_view(request):
     """Render the new landing page."""
@@ -63,12 +70,19 @@ def logout_view(request):
     return redirect('teacher_interface')
 
 def chat_history_view(request):
-    """API endpoint to get chat history for the authenticated user or guest session."""
+    """API endpoint to get chat history. Supports filtering by day for history mode."""
+    day = request.GET.get('day')
+    topic = request.GET.get('topic', 'General Learning')
+    
     if request.user.is_authenticated:
-        history = Conversation.objects.filter(user=request.user).order_by('-created_at')[:20]
+        history = Conversation.objects.filter(user=request.user, topic=topic)
+        if day:
+            history = history.filter(day_number=day)
+        else:
+             # Default to current day
+             progress, _ = SubjectProgress.objects.get_or_create(user=request.user, subject=topic)
+             history = history.filter(day_number=progress.current_day)
     else:
-        # Guests see no history or only their session's history if we implement it later
-        # For now, guests start fresh on every visit to ensure privacy
         return JsonResponse({"history": []})
         
     data = [
@@ -76,11 +90,36 @@ def chat_history_view(request):
             "id": h.id,
             "question": h.question, 
             "answer": h.answer, 
+            "topic": h.topic,
+            "day": h.day_number,
             "timestamp": h.created_at.isoformat()
         }
         for h in history
     ]
     return JsonResponse({"history": data})
+
+@login_required
+def subject_days_view(request):
+    """Return status for all 14 days of the requested subject."""
+    subject = request.GET.get('subject', 'General Learning')
+    progress, _ = SubjectProgress.objects.get_or_create(user=request.user, subject=subject)
+    current_day = progress.current_day
+    
+    days = []
+    # Using 14 days as a standard for now
+    for d in range(1, 15):
+        status = "locked"
+        if d < current_day:
+            status = "completed"
+        elif d == current_day:
+            status = "in_progress"
+        
+        days.append({
+            "day": d,
+            "status": status,
+            "label": f"Day {d}"
+        })
+    return JsonResponse({"days": days})
 
 @login_required
 def delete_chat_view(request, chat_id):
@@ -143,10 +182,10 @@ class AskAIView(APIView):
             user = request.user
             profile, _ = UserProfile.objects.get_or_create(user=user)
             
-            # Example Limit for Free Tier (e.g., 20 questions)
-            if profile.plan == 'FREE' and profile.questions_asked >= 20:
+            # Limit for Free Tier (Increased to 100 for testing)
+            if profile.plan == 'FREE' and profile.questions_asked >= 100:
                 return Response(
-                    {"error": "Free tier limit reached. Please upgrade!", "limit_reached": True},
+                    {"error": "You've used all your free lessons! Please upgrade your plan to keep learning.", "limit_reached": True, "is_logged_in": True},
                     status=status.HTTP_403_FORBIDDEN
                 )
             
@@ -157,9 +196,71 @@ class AskAIView(APIView):
             # Call FreeFlow LLM API
             client = get_freeflow_client()
             
-            # Fetch recent conversation history for memory (last 5 exchanges)
-            history_objs = Conversation.objects.filter(user=user).order_by('-created_at')[:5]
-            messages = [{"role": "system", "content": f"You are a friendly AI Teacher for small kids. The current topic is {topic}. \nRules:\n1. Keep answers very short, simple, and exciting!\n2. Use lots of emojis! 🌈✨\n3. DO NOT use any asterisks (*) or bolding (**). Keep the text clean and easy to read.\n4. Use a warm, encouraging tone."}]
+            # Generalized Day Tracking
+            current_day = 1
+            progress = None
+            if request.user.is_authenticated:
+                progress, _ = SubjectProgress.objects.get_or_create(user=user, subject=topic)
+                current_day = progress.current_day
+            
+            # Fetch recent conversation history for memory (last 5 exchanges for CURRENT SUBJECT and DAY)
+            # This prevents cross-subject memory leakage
+            history_objs = Conversation.objects.filter(
+                user=user, 
+                topic=topic, 
+                day_number=current_day
+            ).order_by('-created_at')[:5]
+
+            # Define the curriculum or special context based on the topic
+            curriculum_context = f"CURRENT DAY: Day {current_day}\nINSTRUCTIONS:\n1. Focus on the current day's lesson.\n2. After 15 helpful exchanges, or if the student mastered the topic, suggest moving to 'Day {current_day + 1}' and include 'PROGRESS_UPDATE: NEXT_DAY' at the end."
+
+            if "history" in topic.lower():
+                chapters = [
+                    "Origins of Humanity & Early Civilizations", "Ancient Mesopotamia & Egypt",
+                    "Ancient Greece", "Ancient Rome", "The Middle Ages",
+                    "Islamic Golden Age & The Mongols", "The Black Death & Growth of Towns"
+                ]
+                day_name = chapters[current_day - 1] if current_day <= len(chapters) else "Advanced History"
+                curriculum_context += f"\nHISTORY CONTEXT: Focus strictly on {day_name}. DO NOT discuss Astronomy or Science unless asked."
+            elif "astronomy" in topic.lower():
+                chapters = ["Our Solar System", "Burning Stars", "The Milky Way", "Black Holes", "Space Exploration", "The Big Bang", "Galaxies Beyond"]
+                day_name = chapters[current_day - 1] if current_day <= len(chapters) else "Astronomy"
+                curriculum_context += f"\nASTRONOMY CONTEXT: Focus strictly on {day_name}."
+            elif "biology" in topic.lower() or "science" in topic.lower():
+                chapters = ["Building Blocks: Cells", "Plant Life", "Animal Kingdom", "Human Body", "Ecosystems", "Genetics", "Evolution"]
+                day_name = chapters[current_day - 1] if current_day <= len(chapters) else "Science"
+                curriculum_context += f"\nSCIENCE CONTEXT: Focus strictly on {day_name}. DO NOT discuss History or Philosophy."
+            elif "philosophy" in topic.lower():
+                chapters = ["Great Ideas", "Ethics", "Logic", "Ancient Thinkers", "The Nature of Mind", "Justice", "Existentialism"]
+                day_name = chapters[current_day - 1] if current_day <= len(chapters) else "Philosophy"
+                curriculum_context += f"\nPHILOSOPHY CONTEXT: Focus strictly on {day_name}. DO NOT talk about stars, galaxies, or science unless relevant to the philosophical concept."
+
+            system_instr = (
+                f"You are Antigravity, a friendly and intelligent {topic} Tutor for children aged 7–14. "
+                "You are a real one-on-one personal tutor speaking through voice. "
+                "IDENTITY & VOICE:\n"
+                "1. Speak in a warm, gentle, friendly, and encouraging tone suitable for children.\n"
+                "2. Use short sentences and natural pauses.\n"
+                "3. Avoid robotic or formal language. Sound like a caring teacher speaking calmly to one child.\n"
+                "4. Keep responses under 100 words unless telling a short story.\n"
+                "5. Use encouraging phrases like 'That's a great question!' or 'You're thinking really well.'\n"
+                "6. ALWAYS end with exactly ONE simple follow-up question.\n"
+                "CONVERSATION BEHAVIOR:\n"
+                "1. If the student pauses, wait patiently (keep responses flowing naturally).\n"
+                "2. If audio is unclear, say: 'I didn’t catch that fully. Can you say it again?'\n"
+                "3. Break complex ideas into small relatable steps.\n"
+                "4. Praise effort, not just correct answers.\n"
+                "SAFETY & REDIRECTION:\n"
+                "1. Never discuss violence, politics, adult topics, or unsafe behavior.\n"
+                "2. If asked something inappropriate, gently redirect: 'That's not something we need to explore right now. Let’s learn something fun instead!'\n"
+                "CURRICULUM CONTEXT:\n"
+                f"{curriculum_context}\n"
+                "FORMATTING:\n"
+                "1. DO NOT use any asterisks (*) or bolding (**). Keep text clean for text-to-speech.\n"
+                "2. Use emojis in the text to keep it fun! 🌈✨"
+            )
+            
+            messages = [{"role": "system", "content": system_instr}]
             
             # Add history in chronological order
             for chat in reversed(history_objs):
@@ -176,13 +277,36 @@ class AskAIView(APIView):
             )
             answer = response.content
 
-            # Save the conversation
-            Conversation.objects.create(
-                user=user,
-                topic=topic,
-                question=question,
-                answer=answer
-            )
+            # Update subject progress
+            if request.user.is_authenticated:
+                progress.day_question_count += 1
+                
+                # Check for "NEXT_DAY" trigger OR 15 questions limit
+                should_advance = "PROGRESS_UPDATE: NEXT_DAY" in answer or "PROGRESS_UPDATE: NEXT_CHAPTER" in answer or progress.day_question_count >= 15
+                
+                if should_advance:
+                    progress.current_day += 1
+                    progress.day_question_count = 0
+                    answer = answer.replace("PROGRESS_UPDATE: NEXT_DAY", "").replace("PROGRESS_UPDATE: NEXT_CHAPTER", "").strip()
+                
+                progress.save()
+                
+                # Save conversation with day number
+                Conversation.objects.create(
+                    user=user,
+                    topic=topic,
+                    question=question,
+                    answer=answer,
+                    day_number=current_day
+                )
+            else:
+                # Normal topic or guest
+                Conversation.objects.create(
+                    user=user,
+                    topic=topic,
+                    question=question,
+                    answer=answer
+                )
 
             return Response({"answer": answer}, status=status.HTTP_200_OK)
 

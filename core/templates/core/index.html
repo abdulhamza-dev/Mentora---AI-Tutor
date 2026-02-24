@@ -496,7 +496,7 @@
 
     .subjects-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
     }
 
@@ -508,7 +508,7 @@
       padding: 48px 44px;
       overflow: hidden;
       transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s;
-      group: true;
+
     }
 
     .subject-card:hover {
@@ -521,6 +521,14 @@
 
     .subject-card.astronomy:hover {
       border-color: rgba(26, 188, 156, 0.5);
+    }
+
+    .subject-card.science:hover {
+      border-color: rgba(46, 232, 192, 0.5);
+    }
+
+    .subject-card.world-history:hover {
+      border-color: rgba(255, 215, 0, 0.5);
     }
 
     .subject-card .card-glow {
@@ -537,6 +545,24 @@
 
     .subject-card.astronomy .card-glow {
       background: radial-gradient(circle at 70% 30%, rgba(26, 188, 156, 0.12), transparent 70%);
+    }
+
+    .subject-card.science .card-glow {
+      background: radial-gradient(circle at 50% 30%, rgba(46, 232, 192, 0.15), transparent 70%);
+    }
+
+    .subject-card.world-history {
+      cursor: pointer;
+    }
+
+    .subject-card.world-history .card-glow {
+      background: radial-gradient(circle at 40% 40%, rgba(255, 215, 0, 0.12), transparent 70%);
+    }
+
+    .subject-card.philosophy,
+    .subject-card.astronomy,
+    .subject-card.science {
+      cursor: pointer;
     }
 
     .subject-card:hover .card-glow {
@@ -566,6 +592,11 @@
       border: 1px solid rgba(26, 188, 156, 0.25);
     }
 
+    .science .subject-icon {
+      background: rgba(46, 232, 192, 0.15);
+      border: 1px solid rgba(46, 232, 192, 0.25);
+    }
+
     .subject-label {
       font-size: 0.75rem;
       font-weight: 600;
@@ -582,6 +613,10 @@
 
     .astronomy .subject-label {
       color: var(--teal);
+    }
+
+    .science .subject-label {
+      color: var(--teal-light);
     }
 
     .subject-card h3 {
@@ -635,6 +670,10 @@
       background: var(--teal);
     }
 
+    .science .feature-dot {
+      background: var(--teal-light);
+    }
+
     .subject-cta {
       display: inline-flex;
       align-items: center;
@@ -653,6 +692,10 @@
 
     .astronomy .subject-cta {
       color: var(--teal);
+    }
+
+    .science .subject-cta {
+      color: var(--teal-light);
     }
 
     .subject-cta:hover {
@@ -1327,8 +1370,15 @@
       <li><a href="#subjects">Subjects</a></li>
       <li><a href="#how">How It Works</a></li>
       <li><a href="#features">Features</a></li>
-      <li><a href="#testimonials">Reviews</a></li>
-      <li><a href="{% url 'teacher_interface' %}" class="nav-cta">Start Learning</a></li>
+      {% if user.is_authenticated %}
+      <li class="nav-user">Hello, {{ user.username }}</li>
+      <li><a href="{% url 'account' %}">Account</a></li>
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+      <li><a href="{% url 'teacher_interface' %}" class="nav-cta">Go to Class</a></li>
+      {% else %}
+      <li><a href="{% url 'login' %}">Login</a></li>
+      <li><a href="{% url 'signup' %}" class="nav-cta">Join for Free</a></li>
+      {% endif %}
     </ul>
   </nav>
 
@@ -1346,11 +1396,12 @@
         AI-Powered Learning for Ages 8–15
       </div>
       <h1>Learn What <span class="grad">You Love</span> —<br>With Your AI Teacher</h1>
-      <p class="hero-sub-head">Explore Psychology. Discover the Universe. Grow Every Day.</p>
+      <p class="hero-sub-head">Explore Great Ideas. Discover the Universe. Journey Through Time.</p>
       <p class="hero-desc">Engaging lessons powered by AI that adapt to your interests and learning pace. No two
         journeys are the same.</p>
       <div class="hero-btns">
-        <a href="{% url 'teacher_interface' %}" class="btn-primary">Start Free Trial <span
+        <a href="{% if user.is_authenticated %}{% url 'teacher_interface' %}{% else %}{% url 'login' %}{% endif %}"
+          class="btn-primary">{% if user.is_authenticated %}Go to Class{% else %}Start Free Trial{% endif %} <span
             class="btn-arrow">→</span></a>
         <a href="#subjects" class="btn-secondary">Explore Subjects ✦</a>
       </div>
@@ -1374,34 +1425,34 @@
       </div>
       <div class="subjects-grid">
 
-        <!-- Psychology -->
-        <div class="subject-card psychology">
+        <!-- Philosophy -->
+        <div class="subject-card philosophy"
+          onclick="window.location.href='{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Philosophy' %}{% else %}{% url 'login' %}{% endif %}'">
           <div class="card-glow"></div>
           <div class="subject-icon">🧠</div>
-          <div class="subject-label">Psychology</div>
-          <h3>Understand the Human Mind</h3>
-          <p>Dive into thoughts, emotions, and human behavior through interactive stories, case studies, and fun
-            experiments.</p>
+          <div class="subject-label">Philosophy</div>
+          <h3>Explore Great Ideas</h3>
+          <p>Delve into classic and modern philosophical thoughts, ethics, and logic through engaging stories and
+            puzzles.</p>
           <div class="subject-features">
             <div class="feature-item">
-              <div class="feature-dot"></div>Emotional Intelligence Lessons
+              <div class="feature-dot"></div>Critical Thinking
             </div>
             <div class="feature-item">
-              <div class="feature-dot"></div>Cognitive Science Basics
+              <div class="feature-dot"></div>Ethics & Morality
             </div>
             <div class="feature-item">
-              <div class="feature-dot"></div>Behavioral Pattern Analysis
-            </div>
-            <div class="feature-item">
-              <div class="feature-dot"></div>Memory & Learning Techniques
+              <div class="feature-dot"></div>Logic Puzzles
             </div>
           </div>
-          <a href="{% url 'teacher_interface' %}" class="subject-cta">Try a Sample Lesson →</a>
-          <div class="card-decoration">🧩</div>
+          <a href="{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Philosophy' %}{% else %}{% url 'login' %}{% endif %}"
+            class="subject-cta">Start Philosophy Lesson →</a>
+          <div class="card-decoration">💡</div>
         </div>
 
         <!-- Astronomy -->
-        <div class="subject-card astronomy">
+        <div class="subject-card astronomy"
+          onclick="window.location.href='{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Astronomy' %}{% else %}{% url 'login' %}{% endif %}'">
           <div class="card-glow"></div>
           <div class="subject-icon">🔭</div>
           <div class="subject-label">Astronomy</div>
@@ -1421,8 +1472,56 @@
               <div class="feature-dot"></div>AR Space Object Viewer
             </div>
           </div>
-          <a href="#" class="subject-cta">Try a Sample Lesson →</a>
+          <a href="{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Astronomy' %}{% else %}{% url 'login' %}{% endif %}"
+            class="subject-cta">Start Astronomy Lesson →</a>
           <div class="card-decoration">🪐</div>
+        </div>
+        <!-- World History -->
+        <div class="subject-card world-history"
+          onclick="window.location.href='{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'History' %}{% else %}{% url 'login' %}{% endif %}'">
+          <div class="card-glow"></div>
+          <div class="subject-icon">📜</div>
+          <div class="subject-label">World History</div>
+          <h3>Journey Through Time</h3>
+          <p>Discover key events, cultures, and civilizations that shaped our world with interactive timelines and
+            stories.</p>
+          <div class="subject-features">
+            <div class="feature-item">
+              <div class="feature-dot"></div>Historical Timelines
+            </div>
+            <div class="feature-item">
+              <div class="feature-dot"></div>Civilizations & Cultures
+            </div>
+            <div class="feature-item">
+              <div class="feature-dot"></div>Fun Facts & Quizzes
+            </div>
+          </div>
+          <a href="{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'History' %}{% else %}{% url 'login' %}{% endif %}"
+            class="subject-cta">Start World History Lesson →</a>
+          <div class="card-decoration">🏛️</div>
+        </div>
+        <!-- Science -->
+        <div class="subject-card science"
+          onclick="window.location.href='{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Science' %}{% else %}{% url 'login' %}{% endif %}'">
+          <div class="card-glow"></div>
+          <div class="subject-icon">🔬</div>
+          <div class="subject-label">Science</div>
+          <h3>Explore Scientific Wonders</h3>
+          <p>Delve into experiments, discoveries, and interactive lessons across physics, chemistry, and biology.</p>
+          <div class="subject-features">
+            <div class="feature-item">
+              <div class="feature-dot"></div>Hands‑up Experiments
+            </div>
+            <div class="feature-item">
+              <div class="feature-dot"></div>Real‑world Applications
+            </div>
+            <div class="feature-item">
+              <div class="feature-dot"></div>Science Trivia & Challenges
+            </div>
+          </div>
+          <a href="{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Science' %}{% else %}{% url 'login' %}{% endif %}"
+            class="subject-cta">Start Science Lesson →</a>
+          <div class="card-decoration">🧪</div>
         </div>
 
       </div>
