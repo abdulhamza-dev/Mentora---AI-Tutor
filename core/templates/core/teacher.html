@@ -1,7 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Ask AI Teacher{% endblock %}
+{% block title %}Ask Mentora{% endblock %}
 
 {% block content %}
 <style>
@@ -142,9 +142,12 @@
     }
 </style>
 <div class="app-container">
-    <div class="stars-container" id="stars-container"></div>
+    <div class="stars-container" id="stars-container" style="display: none;"></div>
     <!-- Sidebar for Chat History -->
     <aside class="sidebar">
+        <a href="/" class="sidebar-branding">
+            <img src="{% static 'core/images/logo.png' %}" alt="Mentora" class="sidebar-logo">
+        </a>
         <button class="new-chat-btn" onclick="createNewChat()">
             <i data-lucide="plus" style="width: 18px;"></i>
             <span>New Chat</span>
@@ -177,26 +180,21 @@
     <!-- Main Chat Workspace -->
     <main class="main-chat">
         <header class="teacher-header">
-            <h2 style="font-size: 1rem; font-weight: 600;">Antigravity - {{ subject }} Tutor</h2>
-            <div id="subject-progress" class="history-progress-badge"
-                style="background: rgba(26, 188, 156, 0.1); border: 1px solid rgba(26, 188, 156, 0.3); padding: 4px 12px; border-radius: 100px; color: var(--teal); font-size: 0.75rem; font-weight: 500;">
-                Day {{ current_day }}
+            <!-- Header branding removed (moved to sidebar) -->
+
+            <div class="header-status-pill">
+                <div id="listening-text" class="status-indicator">Mentora - {{ subject }}</div>
+                <div id="subject-progress" class="status-day">Day {{ current_day }}</div>
             </div>
-            <div class="voice-controls">
-                <button id="toggle-listening-btn" class="btn-secondary btn-stop-listening">
-                    <i data-lucide="mic-off" style="width: 16px;"></i>
-                    <span>Stop Listening</span>
+
+            <div class="header-actions">
+                <button id="toggle-listening-btn" class="action-btn" title="Toggle Listening">
+                    <i data-lucide="mic" style="width: 18px;"></i>
                 </button>
             </div>
         </header>
 
-        <div class="interaction-hub">
-            <div id="logo-container" class="tutor-logo-container">
-                <div class="glow-effect"></div>
-                <img src="{% static 'core/images/logo.png' %}" alt="Logo" class="tutor-logo">
-            </div>
-            <div id="listening-text" class="listening-status">Listening...</div>
-        </div>
+        <!-- Interaction Hub removed for cleaner UI -->
 
         <!-- Message Stream -->
         <div id="chat-stream" class="chat-stream">
@@ -205,7 +203,7 @@
                     <img src="{% static 'core/images/logo.png' %}" alt="Logo"
                         style="width: 24px; height: 24px; border-radius: 4px;">
                 </div>
-                <div class="message-text">Hello! I'm your AI Tutor. What would you like to learn today?</div>
+                <div class="message-text">Hello! I'm your {{ subject }} tutor 😊 Ready to begin?</div>
             </div>
         </div>
 
@@ -216,7 +214,7 @@
                     style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;">
                     <i data-lucide="mic" style="width: 20px;"></i>
                 </button>
-                <input type="text" id="student-question" class="chat-input" placeholder="Message AI Teacher..."
+                <input type="text" id="student-question" class="chat-input" placeholder="Message Mentora..."
                     autocomplete="off">
                 <button id="ask-btn" class="btn-submit">
                     <i data-lucide="arrow-up" style="width: 20px;"></i>
@@ -240,7 +238,7 @@
     // Initialize Lucide Icons
     lucide.createIcons();
 
-    const logoContainer = document.getElementById('logo-container');
+    const mainChat = document.querySelector('.main-chat');
     const listeningText = document.getElementById('listening-text');
     const toggleListeningBtn = document.getElementById('toggle-listening-btn');
     const questionInput = document.getElementById('student-question');
@@ -278,21 +276,21 @@
 
         recognition.onstart = () => {
             isListening = true;
-            logoContainer.classList.add('listening');
-            listeningText.innerText = "I'm listening...";
+            mainChat.classList.add('listening-active');
+            listeningText.innerText = "Listening...";
             micBtn.classList.add('recording');
         };
 
         recognition.onend = () => {
             isListening = false;
-            logoContainer.classList.remove('listening');
+            mainChat.classList.remove('listening-active');
             micBtn.classList.remove('recording');
 
             // Auto-restart if we should still be listening and not speaking
             if (shouldListen && !isSpeaking) {
                 try { recognition.start(); } catch (e) { }
             } else if (!shouldListen) {
-                listeningText.innerText = "Listening stopped.";
+                listeningText.innerText = "Mentora - {{ subject }}";
             }
         };
 
@@ -447,6 +445,7 @@
                 actions.appendChild(dropdown);
 
                 container.appendChild(div);
+                container.appendChild(actions); // Fix: Actions were missing from the DOM
                 historyList.appendChild(container);
             });
             lucide.createIcons();
@@ -507,28 +506,28 @@
             chatStream.innerHTML = '';
 
             // Greeting logic
-            let welcomeHeader = `Welcome to your ${currentSubject} journey! 🚀`;
-            let daySpecific = `Today is Day ${day}. Let's continue our lesson!`;
+            let welcomeHeader = `Hello! I'm your ${currentSubject} tutor 😊 Ready to begin?`;
+            let daySpecific = `Today is Day ${day}. Let's dive in!`;
 
             if (currentSubject.toLowerCase().includes("history")) {
                 const chapters = ["Dawn of Civilization", "Glory of Greece", "Might of Rome", "Middle Ages", "Renaissance", "Industrial Revolution", "Modern Age"];
                 const dayName = chapters[day - 1] || "World History";
-                daySpecific = `Today is Day ${day}. We're exploring ${dayName}! 🏛️📜`;
+                daySpecific = `Today is Day ${day}. We're exploring ${dayName}! 🏛️📜 Shall we start?`;
             } else if (currentSubject.toLowerCase().includes("astronomy")) {
                 const chapters = ["Our Solar System", "Burning Stars", "The Milky Way", "Black Holes", "Space Exploration", "The Big Bang", "Galaxies Beyond"];
                 const dayName = chapters[day - 1] || "the Universe";
-                daySpecific = `Today is Day ${day}. We're looking at ${dayName}! 🌌✨`;
+                daySpecific = `Today is Day ${day}. We're looking at ${dayName}! 🌌✨ Ready to explore?`;
             } else if (currentSubject.toLowerCase().includes("biology") || currentSubject.toLowerCase().includes("science")) {
                 const chapters = ["Building Blocks: Cells", "Plant Life", "Animal Kingdom", "Human Body", "Ecosystems", "Genetics", "Evolution"];
                 const dayName = chapters[day - 1] || "Science";
-                daySpecific = `Today is Day ${day}. We're studying ${dayName}! 🌿🔬`;
+                daySpecific = `Today is Day ${day}. We're studying ${dayName}! 🌿🔬 Ready to start?`;
             } else if (currentSubject.toLowerCase().includes("philosophy")) {
                 const chapters = ["Great Ideas", "Ethics", "Logic", "Ancient Thinkers", "The Nature of Mind", "Justice", "Existentialism"];
                 const dayName = chapters[day - 1] || "Philosophy";
-                daySpecific = `Today is Day ${day}. We're exploring ${dayName}! 🧠💡`;
+                daySpecific = `Today is Day ${day}. We're exploring ${dayName}! 🧠💡 Ready to begin?`;
             }
 
-            const greeting = history.length > 0 ? `Welcome back to Day ${day}! I'm ready to continue our lesson on ${currentSubject}.` : `${welcomeHeader} ${daySpecific}`;
+            const greeting = history.length > 0 ? `Welcome back to Day ${day}! I'm your ${currentSubject} tutor 😊 Ready to continue?` : welcomeHeader;
 
             if (history.length > 0) {
                 // Show returning greeting briefly or as first message
@@ -572,7 +571,7 @@
 
     function createNewChat() {
         chatStream.innerHTML = '';
-        const openingLine = "Hello! I'm your {{ subject }} Tutor. What would you like to learn today?";
+        const openingLine = "Hello! I'm your {{ subject }} tutor 😊 Ready to begin?";
         addMessage(openingLine, false);
         speak(openingLine);
     }
@@ -664,5 +663,40 @@
         }
     }
     generateStars();
+
+    // --- AI Process Cleanup on Navigation ---
+    function stopAllAIProcesses() {
+        // 1. Stop Speech Synthesis
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+
+        // 2. Stop Speech Recognition
+        if (recognition) {
+            shouldListen = false; // Prevent auto-restart
+            try {
+                recognition.stop();
+                recognition.abort();
+            } catch (e) {
+                // Ignore errors if already stopped
+            }
+        }
+
+        // 3. Force stop any speaking state
+        isSpeaking = false;
+        isListening = false;
+    }
+
+    // Handle standard page navigation/unloading
+    window.addEventListener('beforeunload', stopAllAIProcesses);
+    window.addEventListener('pagehide', stopAllAIProcesses);
+    window.addEventListener('unload', stopAllAIProcesses);
+
+    // Optional: Stop when tab becomes hidden (switching tabs)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopAllAIProcesses();
+        }
+    });
 </script>
 {% endblock %}

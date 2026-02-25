@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Teacher — Learn What You Love</title>
+  <title>Mentora — Learn What You Love</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
     rel="stylesheet">
@@ -97,7 +97,8 @@
       letter-spacing: -0.02em;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 0;
+      /* Remove gap */
       text-decoration: none;
       color: white;
     }
@@ -115,6 +116,20 @@
 
     .logo span {
       color: var(--teal);
+    }
+
+    .nav-logo-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      object-fit: contain;
+      transform: translateY(2px);
+      /* Nudged down */
+      margin-right: -12px;
+    }
+
+    .nav-logo-text {
+      line-height: 1;
     }
 
     .nav-links {
@@ -180,7 +195,8 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      padding: 120px 60px 80px;
+      padding: 0 24px;
+      /* Reduced vertical padding for better centering */
     }
 
     /* Star canvas */
@@ -195,10 +211,11 @@
       position: absolute;
       inset: 0;
       z-index: 1;
-      opacity: 0.15;
+      opacity: 0.08;
+      /* Subtler noise */
       background:
-        radial-gradient(ellipse at 70% 50%, rgba(106, 13, 173, 0.6) 0%, transparent 60%),
-        radial-gradient(ellipse at 30% 60%, rgba(26, 188, 156, 0.4) 0%, transparent 50%);
+        radial-gradient(ellipse at 70% 50%, rgba(106, 13, 173, 0.4) 0%, transparent 60%),
+        radial-gradient(ellipse at 30% 60%, rgba(26, 188, 156, 0.2) 0%, transparent 50%);
     }
 
     /* Floating orbs */
@@ -213,7 +230,7 @@
     .orb-1 {
       width: 400px;
       height: 400px;
-      background: rgba(106, 13, 173, 0.3);
+      background: rgba(106, 13, 173, 0.15);
       top: 10%;
       right: 5%;
       animation-delay: 0s;
@@ -222,7 +239,7 @@
     .orb-2 {
       width: 300px;
       height: 300px;
-      background: rgba(26, 188, 156, 0.2);
+      background: rgba(26, 188, 156, 0.1);
       bottom: 20%;
       left: 10%;
       animation-delay: -3s;
@@ -231,7 +248,7 @@
     .orb-3 {
       width: 200px;
       height: 200px;
-      background: rgba(155, 61, 255, 0.2);
+      background: rgba(155, 61, 255, 0.1);
       top: 50%;
       left: 40%;
       animation-delay: -5s;
@@ -252,8 +269,45 @@
     .hero-content {
       position: relative;
       z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
-      max-width: 820px;
+      max-width: 900px;
+      margin-top: -40px;
+      /* Counter-act nav height for true centering */
+    }
+
+    .hero-branding {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      /* No gap */
+      margin-bottom: 24px;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .hero-logo {
+      width: 200px;
+      /* Massive presence */
+      height: 200px;
+      border-radius: 28px;
+      object-fit: contain;
+      transform: translateY(4px);
+      /* Nudged down to align with text baseline */
+      margin-right: -35px;
+      /* Final extreme proximity - visually fused */
+    }
+
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 4.5rem;
+      line-height: 1;
+      /* Stabilize alignment */
+      letter-spacing: -0.04em;
+      color: white;
+      margin: 0;
     }
 
     .hero-badge {
@@ -732,16 +786,7 @@
       position: relative;
     }
 
-    .steps-container::before {
-      content: '';
-      position: absolute;
-      top: 56px;
-      left: 16.5%;
-      right: 16.5%;
-      height: 1px;
-      background: linear-gradient(to right, transparent, var(--card-border), var(--card-border), transparent);
-      z-index: 0;
-    }
+
 
     .step {
       padding: 40px 36px;
@@ -1360,10 +1405,8 @@
 
   <!-- Nav -->
   <nav id="navbar">
-    <a href="#" class="logo">
-      <img src="{% static 'core/images/logo.png' %}" alt="Logo"
-        style="width: 40px; height: 40px; border-radius: 8px; margin-right: 10px;">
-      AI <span>Teacher</span>
+    <a href="/" class="logo">
+      <span class="nav-logo-text">Mentora</span>
     </a>
     <ul class="nav-links">
       <li><a href="#hero">Home</a></li>
@@ -1391,14 +1434,23 @@
     <div class="orb orb-3"></div>
 
     <div class="hero-content">
+      <div class="hero-branding">
+        <img src="{% static 'core/images/logo.png' %}" alt="Logo" class="hero-logo">
+        <h1 class="hero-title">Mentora</h1>
+      </div>
+
       <div class="hero-badge">
         <span class="dot"></span>
         AI-Powered Learning for Ages 8–15
       </div>
-      <h1>Learn What <span class="grad">You Love</span> —<br>With Your AI Teacher</h1>
+
+      <h2
+        style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 20px; animation: fadeUp 0.8s 0.15s ease both;">
+        Learn What <span class="grad">You Love</span>
+      </h2>
+
       <p class="hero-sub-head">Explore Great Ideas. Discover the Universe. Journey Through Time.</p>
-      <p class="hero-desc">Engaging lessons powered by AI that adapt to your interests and learning pace. No two
-        journeys are the same.</p>
+      <p class="hero-desc">Engaging lessons powered by AI that adapt to your interests and learning pace.</p>
       <div class="hero-btns">
         <a href="{% if user.is_authenticated %}{% url 'teacher_interface' %}{% else %}{% url 'login' %}{% endif %}"
           class="btn-primary">{% if user.is_authenticated %}Go to Class{% else %}Start Free Trial{% endif %} <span
@@ -1421,7 +1473,7 @@
           <div class="section-tag">Choose Your Journey</div>
           <h2 class="section-title">Two Worlds.<br>Infinite Discoveries.</h2>
         </div>
-        <p class="section-sub">Pick your passion and let your AI Teacher craft a personalized path just for you.</p>
+        <p class="section-sub">Pick your passion and let Mentora craft a personalized path just for you.</p>
       </div>
       <div class="subjects-grid">
 
@@ -1500,29 +1552,7 @@
             class="subject-cta">Start World History Lesson →</a>
           <div class="card-decoration">🏛️</div>
         </div>
-        <!-- Science -->
-        <div class="subject-card science"
-          onclick="window.location.href='{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Science' %}{% else %}{% url 'login' %}{% endif %}'">
-          <div class="card-glow"></div>
-          <div class="subject-icon">🔬</div>
-          <div class="subject-label">Science</div>
-          <h3>Explore Scientific Wonders</h3>
-          <p>Delve into experiments, discoveries, and interactive lessons across physics, chemistry, and biology.</p>
-          <div class="subject-features">
-            <div class="feature-item">
-              <div class="feature-dot"></div>Hands‑up Experiments
-            </div>
-            <div class="feature-item">
-              <div class="feature-dot"></div>Real‑world Applications
-            </div>
-            <div class="feature-item">
-              <div class="feature-dot"></div>Science Trivia & Challenges
-            </div>
-          </div>
-          <a href="{% if user.is_authenticated %}{% url 'teacher_interface_subject' 'Science' %}{% else %}{% url 'login' %}{% endif %}"
-            class="subject-cta">Start Science Lesson →</a>
-          <div class="card-decoration">🧪</div>
-        </div>
+
 
       </div>
     </div>
@@ -1540,13 +1570,13 @@
           <div class="step-num">01</div>
           <span class="step-icon">🎯</span>
           <h4>Choose Your Subject</h4>
-          <p>Pick Psychology, Astronomy, or both. Your AI Teacher immediately personalizes your learning environment
+          <p>Pick Psychology, Astronomy, or both. Mentora immediately personalizes your learning environment
             based on your choice and age group.</p>
         </div>
         <div class="step">
           <div class="step-num">02</div>
           <span class="step-icon">🤖</span>
-          <h4>Meet Your AI Teacher</h4>
+          <h4>Meet Mentora</h4>
           <p>Your dedicated AI tutor learns your pace, style, and interests — adapting every lesson to keep you engaged
             and progressing at your best.</p>
         </div>
@@ -1566,24 +1596,32 @@
     <div class="container">
       <div class="progress-layout">
         <div class="progress-cards">
-          <div class="stat-card">
+          <div class="stat-card"
+            onclick="window.location.href='{% if user.is_authenticated %}{% url 'account' %}{% else %}{% url 'login' %}{% endif %}'"
+            style="cursor: pointer;">
             <span class="stat-icon">⚡</span>
-            <div class="stat-val">2,840</div>
+            <div id="stat-xp" class="stat-val">2,840</div>
             <div class="stat-label">XP Points Earned</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card"
+            onclick="window.location.href='{% if user.is_authenticated %}{% url 'account' %}{% else %}{% url 'login' %}{% endif %}'"
+            style="cursor: pointer;">
             <span class="stat-icon">🎖️</span>
-            <div class="stat-val">14</div>
+            <div id="stat-badges" class="stat-val">14</div>
             <div class="stat-label">Badges Unlocked</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card"
+            onclick="window.location.href='{% if user.is_authenticated %}{% url 'account' %}{% else %}{% url 'login' %}{% endif %}'"
+            style="cursor: pointer;">
             <span class="stat-icon">📋</span>
-            <div class="stat-val">7</div>
+            <div id="stat-quizzes" class="stat-val">7</div>
             <div class="stat-label">Quizzes Remaining</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card"
+            onclick="window.location.href='{% if user.is_authenticated %}{% url 'account' %}{% else %}{% url 'login' %}{% endif %}'"
+            style="cursor: pointer;">
             <span class="stat-icon">🎲</span>
-            <div class="stat-val">3</div>
+            <div id="stat-challenges" class="stat-val">3</div>
             <div class="stat-label">Surprise Challenges</div>
           </div>
         </div>
@@ -1592,14 +1630,19 @@
           <h2 class="section-title">Every Lesson Moves You Forward</h2>
           <p class="section-sub">Watch your knowledge grow in real time. Earn rewards, climb leaderboards, and unlock
             hidden content as you master each topic.</p>
-          <div class="badge-row">
+          <div class="badge-row"
+            onclick="window.location.href='{% if user.is_authenticated %}{% url 'account' %}{% else %}{% url 'login' %}{% endif %}'"
+            style="cursor: pointer;">
             <div class="badge">🌟 Star Gazer</div>
             <div class="badge">🧠 Mind Explorer</div>
             <div class="badge">🔥 7-Day Streak</div>
             <div class="badge">🚀 Space Pioneer</div>
           </div>
-          <div class="xp-bar-wrap">
-            <div class="xp-bar-label"><span>Level 8 Progress</span><span>2,840 / 4,000 XP</span></div>
+          <div class="xp-bar-wrap"
+            onclick="window.location.href='{% if user.is_authenticated %}{% url 'account' %}{% else %}{% url 'login' %}{% endif %}'"
+            style="cursor: pointer;">
+            <div class="xp-bar-label"><span id="level-title">Level 8 Progress</span><span id="xp-progress">2,840 / 4,000
+                XP</span></div>
             <div class="xp-bar">
               <div class="xp-fill" id="xpFill"></div>
             </div>
@@ -1679,53 +1722,7 @@
     </div>
   </section>
 
-  <!-- Testimonials -->
-  <section id="testimonials">
-    <div class="container">
-      <div class="testimonials-header">
-        <div class="section-tag">What People Say</div>
-        <h2 class="section-title">Kids Love It. Parents Trust It.</h2>
-      </div>
-      <div class="testimonials-grid">
-        <div class="testi-card">
-          <div class="testi-stars">★★★★★</div>
-          <p class="testi-quote">"My daughter never liked science until she found AI Teacher. Now she spends hours
-            exploring planets and asking the AI tutor questions I can't even answer!"</p>
-          <div class="testi-author">
-            <div class="testi-avatar">👩</div>
-            <div>
-              <div class="testi-name">Sarah K.</div>
-              <div class="testi-role">Parent of a 10-year-old</div>
-            </div>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="testi-stars">★★★★★</div>
-          <p class="testi-quote">"Made science fun! I love earning badges and the AI tutor explains things in a way that
-            actually makes sense to me. It's way better than school!"</p>
-          <div class="testi-author">
-            <div class="testi-avatar">👦</div>
-            <div>
-              <div class="testi-name">Marcus, age 13</div>
-              <div class="testi-role">Student</div>
-            </div>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="testi-stars">★★★★★</div>
-          <p class="testi-quote">"As a teacher, I recommend AI Teacher to every parent in my class. The adaptive lessons
-            are remarkable — every child gets exactly what they need."</p>
-          <div class="testi-author">
-            <div class="testi-avatar">🧑‍🏫</div>
-            <div>
-              <div class="testi-name">Mr. Patel</div>
-              <div class="testi-role">Grade 6 Science Teacher</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+
 
   <!-- CTA Banner -->
   <section id="cta">
@@ -1733,7 +1730,7 @@
     <div class="container" style="position:relative;z-index:1;">
       <div class="section-tag">Ready to Begin?</div>
       <h2 class="section-title">Start Your Free Learning<br>Journey Today</h2>
-      <p class="section-sub">No credit card required. Explore Psychology and Astronomy with your personalized AI Teacher
+      <p class="section-sub">No credit card required. Explore Psychology and Astronomy with Mentora
         — free for 14 days.</p>
       <div class="cta-btns">
         <a href="{% url 'teacher_interface' %}" class="btn-primary">Start Free Trial <span
@@ -1751,12 +1748,18 @@
           <a href="#" class="logo" style="margin-bottom:0;">
             <img src="{% static 'core/images/logo.png' %}" alt="Logo"
               style="width: 32px; height: 32px; border-radius: 8px; margin-right: 10px;">
-            AI <span>Teacher</span>
+            Mentora
           </a>
           <p style="margin-top:14px;">Empowering curious young minds with intuitive, personalized, and immersive
             learning experiences.</p>
           <div class="social-links" style="margin-top:20px;">
-            <a href="#" class="social-link">𝕏</a>
+            <a href="https://discord.gg/YhBfeyK9" target="_blank" class="social-link"
+              title="Join our Discord community">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.069.069 0 0 0-.032.027C.533 9.048-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993.033.047.092.063.143.028a19.829 19.829 0 0 0 6.002-3.03.085.085 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.419-2.157 2.419z" />
+              </svg>
+            </a>
             <a href="#" class="social-link">📘</a>
             <a href="#" class="social-link">📸</a>
             <a href="#" class="social-link">▶️</a>
@@ -1765,10 +1768,10 @@
         <div class="footer-col">
           <h5>Learn</h5>
           <ul>
-            <li><a href="#">Psychology</a></li>
-            <li><a href="#">Astronomy</a></li>
-            <li><a href="#">AI Learning Paths</a></li>
-            <li><a href="#">Sample Lessons</a></li>
+            <li><a href="/teacher/Philosophy/">Philosophy</a></li>
+            <li><a href="/teacher/Astronomy/">Astronomy</a></li>
+            <li><a href="/teacher/History/">World History</a></li>
+
           </ul>
         </div>
         <div class="footer-col">
@@ -1791,8 +1794,8 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>©️ 2025 AI Teacher. All rights reserved.</p>
-        <p style="color:var(--text-dim); font-size:0.78rem;">hello@aiteacher.app</p>
+        <p>©️ 2025 Mentora. All rights reserved.</p>
+        <p style="color:var(--text-dim); font-size:0.78rem;">hello@mentora.fit</p>
       </div>
     </div>
   </footer>
@@ -1850,14 +1853,15 @@
 
     function initStars() {
       stars = [];
-      for (let i = 0; i < 180; i++) {
+      const starCount = window.innerWidth < 768 ? 150 : 300;
+      for (let i = 0; i < starCount; i++) {
         stars.push({
           x: Math.random() * W,
           y: Math.random() * H,
-          r: Math.random() * 1.5 + 0.2,
-          alpha: Math.random() * 0.8 + 0.2,
-          speed: Math.random() * 0.3 + 0.05,
-          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          r: Math.random() * 1.8 + 0.1,
+          alpha: Math.random() * 0.9 + 0.1,
+          speed: Math.random() * 0.4 + 0.05,
+          twinkleSpeed: Math.random() * 0.03 + 0.005,
           twinklePhase: Math.random() * Math.PI * 2
         });
       }
@@ -1866,6 +1870,20 @@
     function drawStars(t) {
       ctx.clearRect(0, 0, W, H);
       stars.forEach(s => {
+        // Move stars (Parallax effect: larger stars move slightly faster)
+        s.y -= s.speed;
+        s.x += s.speed * 0.3;
+
+        // Wrap around logic
+        if (s.y < -10) {
+          s.y = H + 10;
+          s.x = Math.random() * W;
+        }
+        if (s.x > W + 10) {
+          s.x = -10;
+          s.y = Math.random() * H;
+        }
+
         s.twinklePhase += s.twinkleSpeed;
         const a = s.alpha * (0.6 + 0.4 * Math.sin(s.twinklePhase));
         ctx.beginPath();
@@ -1900,6 +1918,47 @@
       });
     }, { threshold: 0.5 });
     xpObs.observe(xpFill);
+
+    // Dynamic Dashboard Stats
+    {% if user.is_authenticated %}
+    async function loadDashboardStats() {
+      try {
+        const response = await fetch('/api/dashboard/stats/');
+        const data = await response.json();
+
+        document.getElementById('stat-xp').innerText = data.total_xp.toLocaleString();
+        document.getElementById('stat-badges').innerText = data.badges_count;
+        document.getElementById('stat-quizzes').innerText = data.quizzes_remaining;
+        document.getElementById('stat-challenges').innerText = data.active_challenges.length;
+
+        document.getElementById('level-title').innerText = `Level ${data.level.number} Progress`;
+        document.getElementById('xp-progress').innerText = `${data.total_xp.toLocaleString()} / ${data.xp_to_next_level.toLocaleString()} XP`;
+
+        // Update XP Bar width directly since we are setting real progress
+        const percentage = data.progress_percentage;
+        xpFill.style.width = percentage + '%';
+        xpFill.classList.add('animated'); // Ensure it transitions
+
+        // Update badges
+        const badgeRow = document.querySelector('.badge-row');
+        if (data.recent_badges.length > 0) {
+          badgeRow.innerHTML = '';
+          data.recent_badges.forEach(ub => {
+            const iconMap = { 'star': '🌟', 'brain': '🧠', 'flame': '🔥', 'rocket': '🚀', 'trophy': '🏆' };
+            const icon = iconMap[ub.badge.icon_name] || '🏅';
+            const badgeEl = document.createElement('div');
+            badgeEl.className = 'badge';
+            badgeEl.innerText = `${icon} ${ub.badge.name}`;
+            badgeEl.title = ub.badge.description;
+            badgeRow.appendChild(badgeEl);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+      }
+    }
+    loadDashboardStats();
+    {% endif %}
   </script>
 </body>
 

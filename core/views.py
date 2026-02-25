@@ -8,11 +8,20 @@ from dotenv import load_dotenv
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Conversation, UserProfile, SubjectProgress
+from .models import Conversation, UserProfile, SubjectProgress, XPTransaction, Level, Badge, UserBadge, Quiz, UserQuizProgress, SurpriseChallenge
+from .serializers import DashboardStatsSerializer
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib import messages
+from django.contrib.auth import logout, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.sessions.models import Session
 
 # Initialize FreeFlow Client
 def get_freeflow_client():
-    load_dotenv()
+    from django.conf import settings
+    env_path = os.path.join(settings.BASE_DIR, '.env')
+    load_dotenv(env_path)
     return FreeFlowClient()
 
 def teacher_view(request, subject="General Learning"):
@@ -135,12 +144,99 @@ def delete_chat_view(request, chat_id):
 def account_view(request):
     """Render the user account/profile page and handle updates."""
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    
+    # Fetch gamification data
+    badges = request.user.badges.all().select_related('badge')
+    next_level = Level.objects.filter(number=(profile.current_level.number + 1 if profile.current_level else 2)).first()
+    
+    # XP Progress calculation
+    xp_to_next = next_level.xp_threshold if next_level else profile.total_xp
+    xp_progress = 0
+    if next_level:
+        current_lvl_xp = profile.current_level.xp_threshold if profile.current_level else 0
+        total_range = next_level.xp_threshold - current_lvl_xp
+        earned_in_range = profile.total_xp - current_lvl_xp
+        xp_progress = min(100, max(0, int((earned_in_range / total_range) * 100))) if total_range > 0 else 0
+    else:
+        xp_progress = 100
+
+    # Quizzes & Challenges
+    total_quizzes = Quiz.objects.count()
+    completed_quizzes = UserQuizProgress.objects.filter(user=request.user, completed=True).count()
+    quizzes_remaining = max(0, total_quizzes - completed_quizzes)
+    active_challenges = SurpriseChallenge.objects.filter(is_active=True)
+
     if request.method == 'POST':
-        interests = request.POST.get('interests')
-        profile.interests = interests
-        profile.save()
+        action = request.POST.get('action')
+        
+        if action == 'update_profile':
+            new_username = request.POST.get('username')
+            new_name = request.POST.get('name', '')
+            
+            if not new_username:
+                messages.error(request, "Username cannot be empty")
+            else:
+                user = request.user
+                if User.objects.filter(username=new_username).exclude(id=user.id).exists():
+                    messages.error(request, "This username is already taken.")
+                else:
+                    user.username = new_username
+                    name_parts = new_name.split(' ', 1)
+                    user.first_name = name_parts[0]
+                    user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+                    user.save()
+                    
+                    profile.interests = request.POST.get('interests', '')
+                    profile.skill_level = request.POST.get('skill_level', 'BEGINNER')
+                    if 'profile_picture' in request.FILES:
+                        profile.profile_picture = request.FILES['profile_picture']
+                    profile.save()
+                    messages.success(request, "Profile updated successfully!")
+                
+        elif action == 'change_password':
+            form = PasswordChangeForm(request.user, request.POST)
+            if form.is_valid():
+                user = form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, "Password updated successfully!")
+            else:
+                # Get the first error message
+                error_msg = next(iter(form.errors.values()))[0]
+                messages.error(request, f"Password update failed: {error_msg}")
+                    
+        elif action == 'toggle_2fa':
+            profile.is_2fa_enabled = not profile.is_2fa_enabled
+            profile.save()
+            status_text = "enabled" if profile.is_2fa_enabled else "disabled"
+            messages.success(request, f"2FA has been {status_text}!")
+            
+        elif action == 'logout_all':
+            sessions = Session.objects.filter(expire_date__gte=timezone.now())
+            for session in sessions:
+                # This logic clears all sessions for the current user including the current one
+                if str(request.user.pk) == session.get_decoded().get('_auth_user_id'):
+                    session.delete()
+            messages.success(request, "You have been logged out from all devices.")
+            return redirect('login')
+            
         return redirect('account')
-    return render(request, 'core/account.html', {'profile': profile})
+        
+    login_history = request.user.login_history.all()[:10]
+    password_form = PasswordChangeForm(request.user)
+    
+    context = {
+        'profile': profile,
+        'badges': badges,
+        'xp_to_next': xp_to_next,
+        'xp_progress': xp_progress,
+        'next_level': next_level,
+        'completed_quizzes': completed_quizzes,
+        'quizzes_remaining': quizzes_remaining,
+        'active_challenges': active_challenges,
+        'login_history': login_history,
+        'password_form': password_form,
+    }
+    return render(request, 'core/account.html', context)
 
 def pricing_view(request):
     """Render the pricing plans page."""
@@ -315,7 +411,7 @@ class AskAIView(APIView):
             
             # Specific handling for FreeFlow when no keys are valid
             if "All providers exhausted" in error_msg or "No providers configured" in error_msg:
-                mock_answer = f"I'm here! I've switched to my 'Internal Intelligence' (Mock Mode) because your FreeFlow API keys (Groq/Gemini) are either missing or invalid. Please update your .env file to enable real AI responses!"
+                mock_answer = f"I'm here! I've switched to my 'Internal Intelligence' (Mock Mode) because your FreeFlow API keys (Groq/Gemini/OpenAI) are either missing or invalid in the .env file. Please check your configuration!"
                 
                 Conversation.objects.create(
                     user=user,
@@ -344,3 +440,75 @@ class AskAIView(APIView):
                 {"error": error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class DashboardStatsView(APIView):
+    """
+    GET: Fetch personalized gamification stats for the student dashboard.
+    Also handles daily streak updates.
+    """
+    def get(self, request):
+        profile = request.user.profile
+        today = timezone.now().date()
+        
+        # Streak Update Logic
+        if profile.last_login_date:
+            if profile.last_login_date == today:
+                # Already logged in today
+                pass
+            elif profile.last_login_date == today - timedelta(days=1):
+                # Consecutive day login
+                profile.current_streak += 1
+                if profile.current_streak > profile.max_streak:
+                    profile.max_streak = profile.current_streak
+            else:
+                # Streak broken
+                profile.current_streak = 1
+        else:
+            # First time tracking streak
+            profile.current_streak = 1
+            
+        profile.last_login_date = today
+        profile.save()
+        
+        serializer = DashboardStatsSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class CompleteQuizView(APIView):
+    """
+    POST: Mark a quiz as completed and reward the student with XP.
+    Expects JSON: {"quiz_id": 123, "score": 85}
+    """
+    def post(self, request):
+        quiz_id = request.data.get('quiz_id')
+        score = request.data.get('score', 0)
+        
+        try:
+            quiz = Quiz.objects.get(id=quiz_id)
+            progress, created = UserQuizProgress.objects.get_or_create(
+                user=request.user, 
+                quiz=quiz
+            )
+            
+            if not progress.completed:
+                progress.completed = True
+                progress.score = score
+                progress.completed_at = timezone.now()
+                progress.save()
+                
+                # Reward XP via transaction (triggers signal for level-up/badges)
+                XPTransaction.objects.create(
+                    user=request.user,
+                    amount=quiz.xp_reward,
+                    reason=f"Completed Quiz: {quiz.title}"
+                )
+                
+                return Response({
+                    "status": "success", 
+                    "xp_earned": quiz.xp_reward,
+                    "message": f"Awesome! You earned {quiz.xp_reward} XP!"
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": "Quiz already completed."}, status=status.HTTP_200_OK)
+                
+        except Quiz.DoesNotExist:
+            return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)

@@ -14,5 +14,7 @@ urlpatterns = [
     path('history/', views.chat_history_view, name='chat_history'),
     path('subject/days/', views.subject_days_view, name='subject_days'),
     path('history/delete/<int:chat_id>/', views.delete_chat_view, name='delete_chat'),
+    path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard_stats'),
+    path('quiz/complete/', views.CompleteQuizView.as_view(), name='complete_quiz'),
     path('health/', views.health_check, name='health_check'),
 ]

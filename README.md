@@ -1,6 +1,6 @@
-# AI Teacher Backend 🤖
+# Mentora Backend 🤖
 
-A playful and interactive Django backend for an AI Teacher application designed for children.
+A playful and interactive Django backend for Mentora, an AI Tutor application designed for children.
 
 ## Features
 - **AI Integration**: Powered by OpenAI (GPT-3.5-turbo).
