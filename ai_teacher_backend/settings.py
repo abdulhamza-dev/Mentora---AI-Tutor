@@ -5,6 +5,7 @@ Django settings for ai_teacher_backend project.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -19,12 +20,12 @@ SECRET_KEY = os.environ.get(
     'django-insecure-!9ukp0z556+y0o_-c=7#j!b*d*fma80duc6mzpm2t4e*0v*d-z'
 )
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS',
     'localhost,127.0.0.1,testserver'
-).split(',') + ['*.railway.app', '.up.railway.app']
+).split(',') + ['*.railway.app', '*.up.railway.app', 'mentora-ai-tutor-production.up.railway.app']
 
 # Allow Railway's internal host header
 CSRF_TRUSTED_ORIGINS = [
@@ -82,12 +83,22 @@ WSGI_APPLICATION = 'ai_teacher_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Use DATABASE_URL if available (Railway), otherwise fallback to SQLite for local development
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
