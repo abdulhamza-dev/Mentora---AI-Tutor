@@ -143,6 +143,13 @@ STATICFILES_DIRS = [
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# --- debug logging for deployment diagnostics ---
+import sys
+print("[SETTINGS] DEBUG=", DEBUG, file=sys.stderr)
+print("[SETTINGS] ALLOWED_HOSTS=", ALLOWED_HOSTS, file=sys.stderr)
+print("[SETTINGS] DATABASES=", DATABASES, file=sys.stderr)
+# --------------------------------------------------
+
 # Media files (User uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
