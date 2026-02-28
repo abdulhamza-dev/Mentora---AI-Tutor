@@ -320,7 +320,8 @@
         </div>
 
         <h1 class="profile-name">{{ profile.full_name|default:user.username }}</h1>
-        <div class="profile-level">Lv. {{ profile.current_level.number|default:1 }} • {{ profile.current_level.title|default:"Smart Explorer" }}</div>
+        <div class="profile-level">Lv. {{ profile.current_level.number|default:1 }} • {{
+            profile.current_level.title|default:"Smart Explorer" }}</div>
 
         <div style="text-align: left; margin-top: 24px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 8px;">
@@ -368,8 +369,8 @@
                 <input type="file" name="profile_picture" id="profile-pic-input" style="display: none;">
 
                 <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" name="username" class="form-control" value="{{ user.username }}">
+                    <label>Email Address</label>
+                    <input type="email" name="username" class="form-control" value="{{ user.username }}" required>
                 </div>
                 <div class="form-group">
                     <label>Full Name</label>
@@ -382,11 +383,11 @@
                 <div class="form-group">
                     <label>Stage</label>
                     <select name="skill_level" class="form-control">
-                        <option value="BEGINNER" {% if profile.skill_level == 'BEGINNER' %}selected{% endif %}>Beginner
+                        <option value="BEGINNER" {% if profile.skill_level=='BEGINNER' %}selected{% endif %}>Beginner
                         </option>
-                        <option value="INTERMEDIATE" {% if profile.skill_level == 'INTERMEDIATE' %}selected{% endif %}>
+                        <option value="INTERMEDIATE" {% if profile.skill_level=='INTERMEDIATE' %}selected{% endif %}>
                             Intermediate</option>
-                        <option value="ADVANCED" {% if profile.skill_level == 'ADVANCED' %}selected{% endif %}>Advanced
+                        <option value="ADVANCED" {% if profile.skill_level=='ADVANCED' %}selected{% endif %}>Advanced
                         </option>
                     </select>
                 </div>
@@ -396,43 +397,47 @@
 
         <section class="glass-card" style="margin-bottom: 32px;">
             <h2 class="section-title">Security Settings</h2>
-            
+
             <div style="margin-bottom: 24px;">
                 <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 16px;">Change Password</h3>
                 <form method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="change_password">
-                    
+
                     <div class="form-group">
                         <label>Current Password</label>
                         <input type="password" name="old_password" class="form-control" required>
                         {% if password_form.old_password.errors %}
-                            <span style="color: #ef4444; font-size: 0.75rem;">{{ password_form.old_password.errors.0 }}</span>
+                        <span style="color: #ef4444; font-size: 0.75rem;">{{ password_form.old_password.errors.0
+                            }}</span>
                         {% endif %}
                     </div>
-                    
+
                     <div class="form-group">
                         <label>New Password</label>
                         <input type="password" name="new_password1" class="form-control" required>
                         {% if password_form.new_password1.errors %}
-                            <span style="color: #ef4444; font-size: 0.75rem;">{{ password_form.new_password1.errors.0 }}</span>
+                        <span style="color: #ef4444; font-size: 0.75rem;">{{ password_form.new_password1.errors.0
+                            }}</span>
                         {% endif %}
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Confirm New Password</label>
                         <input type="password" name="new_password2" class="form-control" required>
                         {% if password_form.new_password2.errors %}
-                            <span style="color: #ef4444; font-size: 0.75rem;">{{ password_form.new_password2.errors.0 }}</span>
+                        <span style="color: #ef4444; font-size: 0.75rem;">{{ password_form.new_password2.errors.0
+                            }}</span>
                         {% endif %}
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary">Update Password</button>
                 </form>
             </div>
 
             <div style="border-top: 1px solid var(--border); padding-top: 24px;">
-                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <h3
+                    style="font-size: 1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                     <i data-lucide="shield" style="width: 20px; height: 20px;"></i>
                     Two-Factor Authentication
                 </h3>
@@ -444,9 +449,9 @@
                     <input type="hidden" name="action" value="toggle_2fa">
                     <button class="btn btn-primary" style="width: auto;">
                         {% if profile.is_2fa_enabled %}
-                            Disable 2FA
+                        Disable 2FA
                         {% else %}
-                            Enable 2FA
+                        Enable 2FA
                         {% endif %}
                     </button>
                 </form>
@@ -521,6 +526,23 @@
     document.addEventListener('DOMContentLoaded', function () {
         if (window.lucide) {
             lucide.createIcons();
+        }
+
+        // Auto-submit profile picture when chosen
+        const profilePicInput = document.getElementById('profile-pic-input');
+        if (profilePicInput) {
+            profilePicInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    // Show a simple loading state if possible
+                    const container = document.querySelector('.avatar-container');
+                    if (container) {
+                        container.style.opacity = '0.5';
+                        container.innerHTML += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:0.8rem;color:white;font-weight:bold;">Uploading...</div>';
+                    }
+                    // Submit the nearest form
+                    this.closest('form').submit();
+                }
+            });
         }
     });
 </script>
