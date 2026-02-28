@@ -60,4 +60,4 @@ def check_achievements(user):
         meet_quiz = (ach.quiz_count_required == 0 or profile.quizzes_completed >= ach.quiz_count_required)
         
         if meet_xp and meet_streak and meet_quiz:
-            UserAchievement.objects.create(user=user, achievement=ach)
+            UserAchievement.objects.get_or_create(user=user, achievement=ach)

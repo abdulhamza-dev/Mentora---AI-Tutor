@@ -8,4 +8,4 @@ cmds = ["pip install -r requirements.txt"]
 cmds = ["mkdir -p staticfiles", "python manage.py collectstatic --noinput --verbosity 2 || true", "echo 'Build cache bust - CSS inline fix'"]
 
 [start]
-cmd = "python manage.py migrate && gunicorn ai_teacher_backend.wsgi --bind 0.0.0.0:$PORT --log-file -"
+cmd = "python manage.py migrate --noinput && python manage.py seed_gamification && gunicorn ai_teacher_backend.wsgi --bind 0.0.0.0:$PORT --log-file -"
