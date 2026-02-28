@@ -355,7 +355,7 @@ class AskAIView(APIView):
             curriculum_context = f"Topic: {topic}. Target Level: 100 XP milestones."
 
             system_instr = (
-                f"You are Antigravity, a friendly AI Tutor for {topic}. "
+                f"You are Mentora, a friendly AI Tutor for {topic}. "
                 "Sound like a caring teacher. Keep responses concise (under 100 words). "
                 "Use emojis! 🌈✨"
             )
