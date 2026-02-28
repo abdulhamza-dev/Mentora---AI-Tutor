@@ -1,7 +1,7 @@
-{% extends 'core/base.html' %}
+﻿{% extends 'core/base.html' %}
 {% load static %}
 
-{% block title %}Mentora — Account Settings{% endblock %}
+{% block title %}Mentora â€” Account Settings{% endblock %}
 
 {% block extra_css %}
 <link
@@ -320,8 +320,7 @@
         </div>
 
         <h1 class="profile-name">{{ profile.full_name|default:user.username }}</h1>
-        <div class="profile-level">Lv. {{ profile.current_level.number|default:1 }} • {{
-            profile.current_level.title|default:"Smart Explorer" }}</div>
+        <div class="profile-level">Lv. {{ profile.current_level.number|default:1 }} - {{ profile.current_level.title|default:"Smart Explorer" }}</div>
 
         <div style="text-align: left; margin-top: 24px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 8px;">
@@ -383,11 +382,11 @@
                 <div class="form-group">
                     <label>Stage</label>
                     <select name="skill_level" class="form-control">
-                        <option value="BEGINNER" {% if profile.skill_level=='BEGINNER' %}selected{% endif %}>Beginner
+                        <option value="BEGINNER" {% if profile.skill_level == 'BEGINNER' %}selected{% endif %}>Beginner
                         </option>
-                        <option value="INTERMEDIATE" {% if profile.skill_level=='INTERMEDIATE' %}selected{% endif %}>
+                        <option value="INTERMEDIATE" {% if profile.skill_level == 'INTERMEDIATE' %}selected{% endif %}>
                             Intermediate</option>
-                        <option value="ADVANCED" {% if profile.skill_level=='ADVANCED' %}selected{% endif %}>Advanced
+                        <option value="ADVANCED" {% if profile.skill_level == 'ADVANCED' %}selected{% endif %}>Advanced
                         </option>
                     </select>
                 </div>
@@ -456,7 +455,7 @@
                     </button>
                 </form>
                 <span style="margin-left: 12px; color: var(--text-secondary); font-size: 0.875rem;">
-                    Status: <strong>{% if profile.is_2fa_enabled %}Enabled ✓{% else %}Disabled{% endif %}</strong>
+                    Status: <strong>{% if profile.is_2fa_enabled %}Enabled âœ“{% else %}Disabled{% endif %}</strong>
                 </span>
             </div>
         </section>
@@ -468,19 +467,19 @@
                 <div class="badge-item {% if not item.is_earned %}locked{% endif %}"
                     title="{{ item.achievement.description }}">
                     <div style="font-size: 2rem;">
-                        {% if item.achievement.icon == 'rocket' %}🚀
-                        {% elif item.achievement.icon == 'coins' %}💰
-                        {% elif item.achievement.icon == 'flame' %}🔥
-                        {% elif item.achievement.icon == 'award' %}🏅
-                        {% elif item.achievement.icon == 'brain' %}🧠
-                        {% elif item.achievement.icon == 'trophy' %}🏆
-                        {% else %}⭐{% endif %}
+                        {% if item.achievement.icon == 'rocket' %}ðŸš€
+                        {% elif item.achievement.icon == 'coins' %}ðŸ’°
+                        {% elif item.achievement.icon == 'flame' %}ðŸ”¥
+                        {% elif item.achievement.icon == 'award' %}ðŸ…
+                        {% elif item.achievement.icon == 'brain' %}ðŸ§ 
+                        {% elif item.achievement.icon == 'trophy' %}ðŸ†
+                        {% else %}â­{% endif %}
                     </div>
                     <div style="font-size: 0.7rem; margin-top: 8px;">{{ item.achievement.name }}</div>
                 </div>
                 {% empty %}
                 <p style="color: var(--text-secondary); font-size: 0.8rem; text-align: center; padding: 20px;">No
-                    achievements found yet. Keep learning! 🌟</p>
+                    achievements found yet. Keep learning! ðŸŒŸ</p>
                 {% endfor %}
             </div>
         </section>
@@ -490,10 +489,10 @@
             {% for item in activity_items %}
             <div class="activity-item">
                 <div class="activity-icon">
-                    {% if item.type == 'quiz' %}📝
-                    {% elif item.type == 'achievement' %}🏆
-                    {% elif item.type == 'xp' %}✨
-                    {% else %}🔔{% endif %}
+                    {% if item.type == 'quiz' %}ðŸ“
+                    {% elif item.type == 'achievement' %}ðŸ†
+                    {% elif item.type == 'xp' %}âœ¨
+                    {% else %}ðŸ””{% endif %}
                 </div>
                 <div style="flex: 1;">
                     <div class="activity-title" style="font-weight: 700; font-size: 0.9rem;">{{ item.title }}</div>
@@ -503,7 +502,7 @@
             </div>
             {% empty %}
             <p style="color: var(--text-secondary); font-size: 0.8rem; text-align: center; padding: 20px;">No recent
-                activity yet. Go learn something! 🚀</p>
+                activity yet. Go learn something! ðŸš€</p>
             {% endfor %}
         </section>
 
@@ -547,3 +546,4 @@
     });
 </script>
 {% endblock %}
+
